@@ -1,0 +1,21 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: nucutils
+  labels:
+    app: nucutils
+    app.kubernetes.io/name: nucutils
+    app.kubernetes.io/component: frontend
+spec:
+  # Replace with your desired hostname or remove to auto-generate
+  # host: nucutils.apps.your-cluster.example.com
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: nucutils
+    weight: 100
+  wildcardPolicy: None

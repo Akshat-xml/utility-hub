@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nucutils
+  labels:
+    app: nucutils
+    app.kubernetes.io/name: nucutils
+    app.kubernetes.io/component: frontend
+spec:
+  selector:
+    app: nucutils
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
