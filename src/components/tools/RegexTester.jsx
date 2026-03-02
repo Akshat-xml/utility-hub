@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useToast } from "@/utils/helpers";
 import { Regex, Play, FileText, Trash2, Flag, Copy } from "lucide-react";
 import { copyToClipboard } from "@/utils/helpers";
+import Tooltip from "@/components/Tooltip";
 
 const COMMON_PATTERNS = [
     { label: "Email", pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}", flags: "g" },
@@ -31,10 +32,10 @@ export default function RegexTester() {
     const { showToast, ToastComponent } = useToast();
 
     const flagOptions = [
-        { id: "g", label: "g", desc: "Global" },
-        { id: "i", label: "i", desc: "Case insensitive" },
-        { id: "m", label: "m", desc: "Multiline" },
-        { id: "s", label: "s", desc: "Dotall" },
+        { id: "g", label: "g", desc: "Global — find all matches, not just the first" },
+        { id: "i", label: "i", desc: "Case insensitive — match regardless of upper/lower case" },
+        { id: "m", label: "m", desc: "Multiline — ^ and $ match start/end of each line" },
+        { id: "s", label: "s", desc: "Dotall — dot (.) also matches newline characters" },
     ];
 
     const toggleFlag = (f) => {
@@ -140,19 +141,19 @@ export default function RegexTester() {
                 <div className="flex items-center gap-1">
                     <Flag size={12} style={{ color: "var(--color-text-muted)" }} />
                     {flagOptions.map((f) => (
-                        <button
-                            key={f.id}
-                            onClick={() => toggleFlag(f.id)}
-                            title={f.desc}
-                            className="w-7 h-7 rounded text-xs font-mono font-bold flex items-center justify-center transition-colors"
-                            style={{
-                                background: flags.includes(f.id) ? "var(--color-primary)" : "var(--color-bg-input)",
-                                color: flags.includes(f.id) ? "white" : "var(--color-text-muted)",
-                                border: `1px solid ${flags.includes(f.id) ? "var(--color-primary)" : "var(--color-border)"}`,
-                            }}
-                        >
-                            {f.label}
-                        </button>
+                        <Tooltip key={f.id} text={f.desc} position="top" delay={200}>
+                            <button
+                                onClick={() => toggleFlag(f.id)}
+                                className="w-7 h-7 rounded text-xs font-mono font-bold flex items-center justify-center transition-colors"
+                                style={{
+                                    background: flags.includes(f.id) ? "var(--color-primary)" : "var(--color-bg-input)",
+                                    color: flags.includes(f.id) ? "white" : "var(--color-text-muted)",
+                                    border: `1px solid ${flags.includes(f.id) ? "var(--color-primary)" : "var(--color-border)"}`,
+                                }}
+                            >
+                                {f.label}
+                            </button>
+                        </Tooltip>
                     ))}
                 </div>
                 <div className="h-4 w-px" style={{ background: "var(--color-border)" }} />
@@ -233,7 +234,7 @@ export default function RegexTester() {
                                         {m.value}
                                     </span>
                                     <span className="shrink-0 text-[10px]" style={{ color: "var(--color-text-muted)" }}>@{m.index}</span>
-                                    <button onClick={() => copyToClipboard(m.value, showToast)} className="shrink-0" style={{ color: "var(--color-text-muted)" }}>
+                                    <button onClick={() => copyToClipboard(m.value, showToast)} className="shrink-0" style={{ color: "var(--color-text-muted)" }} title="Copy match">
                                         <Copy size={11} />
                                     </button>
                                 </div>

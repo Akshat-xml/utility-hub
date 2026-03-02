@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/utils/helpers";
 import { GitBranch, Play, Trash2, FileText, Search, ChevronRight, ChevronDown } from "lucide-react";
 
@@ -69,17 +69,30 @@ export default function JsonParser() {
     const [searchTerm, setSearchTerm] = useState("");
     const { showToast, ToastComponent } = useToast();
 
-    const parse = () => {
+    const parse = (isAuto = false) => {
         try {
-            if (!input.trim()) { setError("Please enter some JSON"); return; }
+            if (!input.trim()) {
+                if (!isAuto) setError("Please enter some JSON");
+                return;
+            }
             const result = JSON.parse(input);
             setParsed(result);
             setError("");
         } catch (e) {
-            setError(`Invalid JSON: ${e.message}`);
-            setParsed(null);
+            if (!isAuto) {
+                setError(`Invalid JSON: ${e.message}`);
+                setParsed(null);
+            }
         }
     };
+
+    useEffect(() => {
+        if (input.trim()) {
+            parse(true);
+        } else {
+            setParsed(null);
+        }
+    }, [input]);
 
     const loadSample = () => {
         const sample = {

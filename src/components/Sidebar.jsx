@@ -1,8 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import Tooltip from "@/components/Tooltip";
 
 const TOOL_CATEGORIES = [
+    {
+        name: "Utilities",
+        icon: (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+        ),
+        tools: [
+            { id: "formatter-compare", name: "Formatter & Compare", desc: "Side-by-side text diff with line-level highlighting" },
+            { id: "qr-generator", name: "QR Code Generator", desc: "Generate QR codes from any text or URL" },
+            { id: "markdown-viewer", name: "Markdown Viewer", desc: "Render and preview Markdown in real time" },
+            { id: "regex-tester", name: "Regex Tester", desc: "Test regular expressions with live match highlighting" },
+        ],
+    },
     {
         name: "JSON",
         icon: (
@@ -12,10 +27,10 @@ const TOOL_CATEGORIES = [
             </svg>
         ),
         tools: [
-            { id: "json-beautifier", name: "JSON Beautifier" },
-            { id: "json-parser", name: "JSON Parser" },
-            { id: "json-schema-validator", name: "JSON Schema Validator" },
-            { id: "json-diff", name: "JSON Diff" },
+            { id: "json-beautifier", name: "JSON Beautifier", desc: "Format & indent raw JSON with syntax checking" },
+            { id: "json-parser", name: "JSON Parser", desc: "Parse JSON and explore its structure" },
+            { id: "json-schema-validator", name: "JSON Schema Validator", desc: "Validate JSON against a JSON Schema definition" },
+            { id: "json-diff", name: "JSON Diff", desc: "Compare two JSON objects and highlight differences" },
         ],
     },
     {
@@ -26,7 +41,7 @@ const TOOL_CATEGORIES = [
                 <polyline points="8 6 2 12 8 18" />
             </svg>
         ),
-        tools: [{ id: "xml-parser", name: "XML Parser" }],
+        tools: [{ id: "xml-parser", name: "XML Parser", desc: "Parse and pretty-print XML documents" }],
     },
     {
         name: "Converters",
@@ -39,9 +54,9 @@ const TOOL_CATEGORIES = [
             </svg>
         ),
         tools: [
-            { id: "json-xml-converter", name: "JSON ↔ XML" },
-            { id: "image-base64", name: "Image ↔ Base64" },
-            { id: "color-converter", name: "Color Converter" },
+            { id: "json-xml-converter", name: "JSON ↔ XML", desc: "Convert between JSON and XML formats" },
+            { id: "image-base64", name: "Image ↔ Base64", desc: "Encode images to Base64 or decode Base64 back to image" },
+            { id: "color-converter", name: "Color Converter", desc: "Convert colors between HEX, RGB, HSL and more" },
         ],
     },
     {
@@ -53,22 +68,8 @@ const TOOL_CATEGORIES = [
             </svg>
         ),
         tools: [
-            { id: "base32-encoder", name: "Base32 Encode/Decode" },
-            { id: "base64-encoder", name: "Base64 Encode/Decode" },
-        ],
-    },
-    {
-        name: "Utilities",
-        icon: (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-            </svg>
-        ),
-        tools: [
-            { id: "formatter-compare", name: "Formatter & Compare" },
-            { id: "qr-generator", name: "QR Code Generator" },
-            { id: "markdown-viewer", name: "Markdown Viewer" },
-            { id: "regex-tester", name: "Regex Tester" },
+            { id: "base32-encoder", name: "Base32 Encode/Decode", desc: "Encode or decode text using RFC 4648 Base32" },
+            { id: "base64-encoder", name: "Base64 Encode/Decode", desc: "Encode or decode text using standard Base64" },
         ],
     },
     {
@@ -80,7 +81,7 @@ const TOOL_CATEGORIES = [
             </svg>
         ),
         tools: [
-            { id: "api-tester", name: "API Tester" },
+            { id: "api-tester", name: "API Tester", desc: "Send HTTP requests and inspect responses" },
         ],
     },
 ];
@@ -90,6 +91,8 @@ export default function Sidebar({ activeTool, setActiveTool, collapsed, setColla
     const [expandedCategories, setExpandedCategories] = useState(
         TOOL_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.name]: true }), {})
     );
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const highlightedRef = useRef(null);
 
     const toggleCategory = (name) => {
         setExpandedCategories((prev) => ({ ...prev, [name]: !prev[name] }));
@@ -101,6 +104,38 @@ export default function Sidebar({ activeTool, setActiveTool, collapsed, setColla
             t.name.toLowerCase().includes(search.toLowerCase())
         ),
     })).filter((cat) => cat.tools.length > 0);
+
+    // Flat list of all visible tools for keyboard nav
+    const flatTools = filteredCategories.flatMap((cat) => cat.tools);
+
+    const handleSearchKeyDown = (e) => {
+        if (flatTools.length === 0) return;
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHighlightedIndex((prev) => Math.min(prev + 1, flatTools.length - 1));
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+        } else if (e.key === "Enter" && highlightedIndex >= 0) {
+            e.preventDefault();
+            setActiveTool(flatTools[highlightedIndex].id);
+        } else if (e.key === "Escape") {
+            setSearch("");
+            setHighlightedIndex(-1);
+        }
+    };
+
+    // Reset highlight when search changes
+    useEffect(() => {
+        setHighlightedIndex(-1);
+    }, [search]);
+
+    // Auto-scroll highlighted item into view
+    useEffect(() => {
+        if (highlightedRef.current) {
+            highlightedRef.current.scrollIntoView({ block: "nearest" });
+        }
+    }, [highlightedIndex]);
 
     return (
         <aside
@@ -156,6 +191,7 @@ export default function Sidebar({ activeTool, setActiveTool, collapsed, setColla
                             placeholder="Search tools…"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={handleSearchKeyDown}
                             className="w-full pl-8 pr-3 py-1.5 rounded-md text-xs outline-none transition-all"
                             style={{
                                 background: "var(--color-bg-input)",
@@ -171,79 +207,102 @@ export default function Sidebar({ activeTool, setActiveTool, collapsed, setColla
             <nav className="flex-1 overflow-y-auto px-2 py-2">
                 {filteredCategories.map((category) => (
                     <div key={category.name} className="mb-0.5">
-                        <button
-                            onClick={() => !collapsed && toggleCategory(category.name)}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
-                            style={{ color: "var(--color-text-muted)" }}
-                            title={collapsed ? category.name : undefined}
+                        <Tooltip
+                            text={collapsed ? category.name : ""}
+                            position="right"
+                            delay={200}
                         >
-                            <span className="shrink-0" style={{ color: "var(--color-text-muted)" }}>
-                                {category.icon}
-                            </span>
-                            {!collapsed && (
-                                <>
-                                    <span className="flex-1 text-left">{category.name}</span>
-                                    <svg
-                                        width="10"
-                                        height="10"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.5"
-                                        className="transition-transform duration-200"
-                                        style={{
-                                            transform: expandedCategories[category.name]
-                                                ? "rotate(180deg)"
-                                                : "rotate(0deg)",
-                                        }}
-                                    >
-                                        <polyline points="6 9 12 15 18 9" />
-                                    </svg>
-                                </>
-                            )}
-                        </button>
+                            <button
+                                onClick={() => !collapsed && toggleCategory(category.name)}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors"
+                                style={{ color: "var(--color-text-muted)" }}
+                                title={undefined}
+                            >
+                                <span className="shrink-0" style={{ color: "var(--color-text-muted)" }}>
+                                    {category.icon}
+                                </span>
+                                {!collapsed && (
+                                    <>
+                                        <span className="flex-1 text-left">{category.name}</span>
+                                        <svg
+                                            width="10"
+                                            height="10"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2.5"
+                                            className="transition-transform duration-200"
+                                            style={{
+                                                transform: expandedCategories[category.name]
+                                                    ? "rotate(180deg)"
+                                                    : "rotate(0deg)",
+                                            }}
+                                        >
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                    </>
+                                )}
+                            </button>
+                        </Tooltip>
 
                         {!collapsed && expandedCategories[category.name] && (
                             <div className="ml-2 space-y-px">
-                                {category.tools.map((tool) => (
-                                    <button
-                                        key={tool.id}
-                                        onClick={() => setActiveTool(tool.id)}
-                                        className="w-full text-left px-3 py-1.5 rounded-md text-[0.8125rem] transition-all duration-150 flex items-center gap-2"
-                                        style={{
-                                            background:
-                                                activeTool === tool.id
-                                                    ? "var(--color-bg-active)"
-                                                    : "transparent",
-                                            color:
-                                                activeTool === tool.id
-                                                    ? "var(--color-primary)"
-                                                    : "var(--color-text-secondary)",
-                                            fontWeight: activeTool === tool.id ? 600 : 400,
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (activeTool !== tool.id) {
-                                                e.currentTarget.style.background = "var(--color-bg-hover)";
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (activeTool !== tool.id) {
-                                                e.currentTarget.style.background = "transparent";
-                                            }
-                                        }}
-                                    >
-                                        <span
-                                            className="w-1 h-1 rounded-full shrink-0"
-                                            style={{
-                                                background:
-                                                    activeTool === tool.id
-                                                        ? "var(--color-primary)"
-                                                        : "var(--color-text-muted)",
-                                            }}
-                                        />
-                                        {tool.name}
-                                    </button>
-                                ))}
+                                {category.tools.map((tool) => {
+                                    const flatIdx = flatTools.findIndex((t) => t.id === tool.id);
+                                    const isHighlighted = flatIdx === highlightedIndex;
+                                    const isActive = activeTool === tool.id;
+                                    return (
+                                        <Tooltip
+                                            key={tool.id}
+                                            text={tool.desc}
+                                            position="right"
+                                            delay={300}
+                                        >
+                                            <button
+                                                ref={isHighlighted ? highlightedRef : null}
+                                                onClick={() => { setActiveTool(tool.id); setHighlightedIndex(-1); }}
+                                                className="w-full text-left px-3 py-1.5 rounded-md text-[0.8125rem] transition-all duration-150 flex items-center gap-2"
+                                                style={{
+                                                    background:
+                                                        isActive
+                                                            ? "var(--color-bg-active)"
+                                                            : isHighlighted
+                                                                ? "var(--color-bg-hover)"
+                                                                : "transparent",
+                                                    color:
+                                                        isActive
+                                                            ? "var(--color-primary)"
+                                                            : isHighlighted
+                                                                ? "var(--color-text-primary)"
+                                                                : "var(--color-text-secondary)",
+                                                    fontWeight: isActive || isHighlighted ? 600 : 400,
+                                                    outline: isHighlighted ? "1px solid var(--color-primary)" : "none",
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (!isActive && !isHighlighted) {
+                                                        e.currentTarget.style.background = "var(--color-bg-hover)";
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (!isActive && !isHighlighted) {
+                                                        e.currentTarget.style.background = "transparent";
+                                                    }
+                                                }}
+                                            >
+                                                <span
+                                                    className="w-1 h-1 rounded-full shrink-0"
+                                                    style={{
+                                                        background:
+                                                            isActive || isHighlighted
+                                                                ? "var(--color-primary)"
+                                                                : "var(--color-text-muted)",
+                                                    }}
+                                                />
+                                                {tool.name}
+                                            </button>
+                                        </Tooltip>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -251,30 +310,37 @@ export default function Sidebar({ activeTool, setActiveTool, collapsed, setColla
             </nav>
 
             {/* Collapse toggle */}
-            <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="flex items-center justify-center py-2.5 border-t transition-colors"
-                style={{
-                    borderColor: "var(--color-border)",
-                    color: "var(--color-text-muted)",
-                }}
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            <Tooltip
+                text={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                shortcut="Ctrl+B"
+                position="right"
+                delay={300}
             >
-                <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="transition-transform duration-300"
-                    style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
+                <button
+                    onClick={() => setCollapsed(!collapsed)}
+                    className="flex items-center justify-center py-2.5 border-t transition-colors w-full"
+                    style={{
+                        borderColor: "var(--color-border)",
+                        color: "var(--color-text-muted)",
+                    }}
+                    title={undefined}
                 >
-                    <polyline points="15 18 9 12 15 6" />
-                </svg>
-            </button>
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="transition-transform duration-300"
+                        style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
+                    >
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                </button>
+            </Tooltip>
         </aside>
     );
 }

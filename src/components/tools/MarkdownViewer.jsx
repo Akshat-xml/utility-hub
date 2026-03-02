@@ -85,7 +85,7 @@ export default function MarkdownViewer() {
 
             <div className="flex-1 grid grid-cols-2 gap-0 min-h-0 rounded-lg overflow-hidden" style={{ border: "1px solid var(--color-border)" }}>
                 {/* Editor */}
-                <div className="flex flex-col border-r" style={{ borderColor: "var(--color-border)" }}>
+                <div className="flex flex-col border-r min-h-0" style={{ borderColor: "var(--color-border)" }}>
                     <div className="px-3 py-1.5 text-xs font-semibold border-b flex items-center gap-2"
                         style={{ background: "var(--color-bg-input)", borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
                         <FileText size={12} /> Markdown
@@ -106,7 +106,7 @@ export default function MarkdownViewer() {
                 </div>
 
                 {/* Preview */}
-                <div className="flex flex-col">
+                <div className="flex flex-col min-h-0">
                     <div className="px-3 py-1.5 text-xs font-semibold border-b flex items-center gap-2"
                         style={{ background: "var(--color-bg-input)", borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}>
                         <Eye size={12} /> Preview

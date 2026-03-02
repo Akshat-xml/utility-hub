@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast, copyToClipboard, downloadFile } from "@/utils/helpers";
 import { Sparkles, Minimize2, FileDown, Copy, FileText, Trash2, ChevronDown } from "lucide-react";
 
@@ -11,20 +11,28 @@ export default function JsonBeautifier() {
     const [error, setError] = useState("");
     const { showToast, ToastComponent } = useToast();
 
-    const beautify = () => {
+    const beautify = (isAuto = false) => {
         try {
             if (!input.trim()) {
-                setError("Please enter some JSON");
+                if (!isAuto) setError("Please enter some JSON");
                 return;
             }
             const parsed = JSON.parse(input);
             setOutput(JSON.stringify(parsed, null, indent));
             setError("");
         } catch (e) {
-            setError(`Invalid JSON: ${e.message}`);
-            setOutput("");
+            if (!isAuto) {
+                setError(`Invalid JSON: ${e.message}`);
+                setOutput("");
+            }
         }
     };
+
+    useEffect(() => {
+        if (input.trim()) {
+            beautify(true);
+        }
+    }, [indent, input]);
 
     const minify = () => {
         try {

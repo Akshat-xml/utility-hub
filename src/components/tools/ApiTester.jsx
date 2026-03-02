@@ -270,6 +270,7 @@ export default function ApiTester() {
                                             onClick={() => setShowToken(!showToken)}
                                             className="absolute right-2 top-1/2 -translate-y-1/2"
                                             style={{ color: "var(--color-text-muted)" }}
+                                            title={showToken ? "Hide token" : "Show token"}
                                         >
                                             {showToken ? <EyeOff size={13} /> : <Eye size={13} />}
                                         </button>
@@ -309,6 +310,7 @@ export default function ApiTester() {
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 className="absolute right-2 top-1/2 -translate-y-1/2"
                                                 style={{ color: "var(--color-text-muted)" }}
+                                                title={showPassword ? "Hide password" : "Show password"}
                                             >
                                                 {showPassword ? <EyeOff size={13} /> : <Eye size={13} />}
                                             </button>
@@ -349,6 +351,7 @@ export default function ApiTester() {
                                                 onClick={() => setShowToken(!showToken)}
                                                 className="absolute right-2 top-1/2 -translate-y-1/2"
                                                 style={{ color: "var(--color-text-muted)" }}
+                                                title={showToken ? "Hide value" : "Show value"}
                                             >
                                                 {showToken ? <EyeOff size={13} /> : <Eye size={13} />}
                                             </button>
@@ -429,7 +432,7 @@ export default function ApiTester() {
                                     placeholder="Value"
                                     style={{ flex: 2 }}
                                 />
-                                <button onClick={() => removeHeader(i)} className="shrink-0 p-1 rounded hover:bg-red-500/10" style={{ color: "var(--color-text-muted)" }}>
+                                <button onClick={() => removeHeader(i)} className="shrink-0 p-1 rounded hover:bg-red-500/10" style={{ color: "var(--color-text-muted)" }} title="Remove header">
                                     <X size={14} />
                                 </button>
                             </div>

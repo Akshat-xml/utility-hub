@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast, copyToClipboard } from "@/utils/helpers";
 
 // --- Base32 (RFC 4648) ---
@@ -118,20 +118,28 @@ export default function BaseEncoder() {
 
     const activeEncoding = ENCODINGS.find((e) => e.id === activeTab);
 
-    const process = () => {
+    const process = (isAuto = false) => {
         try {
             if (!input.trim()) {
-                setError("Please enter some text");
+                if (!isAuto) setError("Please enter some text");
                 return;
             }
             const fn = mode === "encode" ? activeEncoding.encode : activeEncoding.decode;
             setOutput(fn(input));
             setError("");
         } catch (e) {
-            setError(e.message);
-            setOutput("");
+            if (!isAuto) {
+                setError(e.message);
+                setOutput("");
+            }
         }
     };
+
+    useEffect(() => {
+        if (input.trim()) {
+            process(true);
+        }
+    }, [input, mode, activeTab]);
 
     const swap = () => {
         setInput(output);

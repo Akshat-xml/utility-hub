@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast, copyToClipboard, downloadFile } from "@/utils/helpers";
 import { CheckCircle, Sparkles, Minimize2, Copy, FileDown, FileText, Trash2, Code } from "lucide-react";
 
@@ -27,12 +27,15 @@ export default function XmlParser() {
         } catch (e) { setError(e.message); }
     };
 
-    const beautify = () => {
+    const beautify = (isAuto = false) => {
         try {
             if (!input.trim()) return;
             const parser = new DOMParser();
             const doc = parser.parseFromString(input, "application/xml");
-            if (doc.querySelector("parsererror")) { setError("Fix XML errors first"); return; }
+            if (doc.querySelector("parsererror")) {
+                if (!isAuto) setError("Fix XML errors first");
+                return;
+            }
             const serializer = new XMLSerializer();
             let xml = serializer.serializeToString(doc);
             let formatted = "", indent = 0;
@@ -44,8 +47,16 @@ export default function XmlParser() {
             formatted = formatted.substring(1, formatted.length - 2);
             setOutput(formatted);
             setError("");
-        } catch (e) { setError(e.message); }
+        } catch (e) {
+            if (!isAuto) setError(e.message);
+        }
     };
+
+    useEffect(() => {
+        if (input.trim()) {
+            beautify(true);
+        }
+    }, [input]);
 
     const minify = () => {
         try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/utils/helpers";
 import { ShieldCheck, Play, FileText, Trash2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import Ajv from "ajv";
@@ -62,22 +62,24 @@ export default function JsonSchemaValidator() {
     const [dataError, setDataError] = useState("");
     const { showToast, ToastComponent } = useToast();
 
-    const validate = () => {
-        setResult(null);
-        setSchemaError("");
-        setDataError("");
+    const validate = (isAuto = false) => {
+        if (!isAuto) {
+            setResult(null);
+            setSchemaError("");
+            setDataError("");
+        }
 
         let parsedSchema, parsedData;
         try {
             parsedSchema = JSON.parse(schema);
         } catch (e) {
-            setSchemaError(`Invalid JSON Schema: ${e.message}`);
+            if (!isAuto) setSchemaError(`Invalid JSON Schema: ${e.message}`);
             return;
         }
         try {
             parsedData = JSON.parse(data);
         } catch (e) {
-            setDataError(`Invalid JSON Data: ${e.message}`);
+            if (!isAuto) setDataError(`Invalid JSON Data: ${e.message}`);
             return;
         }
 
@@ -88,7 +90,7 @@ export default function JsonSchemaValidator() {
 
             if (valid) {
                 setResult({ valid: true, errors: [] });
-                showToast("Validation passed! ✓");
+                if (!isAuto) showToast("Validation passed! ✓");
             } else {
                 const errors = (ajv.errors || []).map((err) => ({
                     path: err.instancePath || "/",
@@ -98,12 +100,18 @@ export default function JsonSchemaValidator() {
                     schemaPath: err.schemaPath,
                 }));
                 setResult({ valid: false, errors });
-                showToast(`Validation failed: ${errors.length} error(s)`, "error");
+                if (!isAuto) showToast(`Validation failed: ${errors.length} error(s)`, "error");
             }
         } catch (e) {
-            setSchemaError(`Schema compilation error: ${e.message}`);
+            if (!isAuto) setSchemaError(`Schema compilation error: ${e.message}`);
         }
     };
+
+    useEffect(() => {
+        if (schema.trim() && data.trim()) {
+            validate(true);
+        }
+    }, [schema, data]);
 
     const loadValidSample = () => {
         setSchema(SAMPLE_SCHEMA);

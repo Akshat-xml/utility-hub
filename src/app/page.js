@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 import JsonBeautifier from "@/components/tools/JsonBeautifier";
@@ -137,6 +137,18 @@ function WelcomeScreen({ onSelectTool }) {
 export default function Home() {
   const [activeTool, setActiveTool] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+
+  // Ctrl+B (or Cmd+B) toggles the sidebar
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault();
+        setCollapsed((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const ToolComponent = activeTool ? TOOLS[activeTool] : null;
 
