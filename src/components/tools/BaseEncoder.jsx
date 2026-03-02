@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useToast, copyToClipboard } from "@/utils/helpers";
+import { AlertTriangle } from "lucide-react";
+
+const AUTO_LIMIT = 1000000; // 1MB limit for auto-processing
 
 // --- Base32 (RFC 4648) ---
 const BASE32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -136,7 +139,7 @@ export default function BaseEncoder() {
     };
 
     useEffect(() => {
-        if (input.trim()) {
+        if (input.trim() && input.length < AUTO_LIMIT) {
             process(true);
         }
     }, [input, mode, activeTab]);
@@ -216,6 +219,13 @@ export default function BaseEncoder() {
                     </button>
                 )}
             </div>
+
+            {input.length >= AUTO_LIMIT && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                    <AlertTriangle size={18} />
+                    <p>Input is very large ({Math.round(input.length / 1024)} KB). Auto-update disabled. Click "Process" to continue.</p>
+                </div>
+            )}
 
             {error && (
                 <div className="mb-4 px-4 py-3 rounded-lg text-sm font-medium" style={{ background: "var(--color-diff-remove)", color: "var(--color-error)" }}>

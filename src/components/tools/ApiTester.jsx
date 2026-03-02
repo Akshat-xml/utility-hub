@@ -2,7 +2,9 @@
 
 import { useState, useRef } from "react";
 import { useToast, copyToClipboard } from "@/utils/helpers";
-import { Send, Plus, Trash2, Copy, Clock, ChevronDown, FileText, X, Shield, Eye, EyeOff, Key } from "lucide-react";
+import { Send, Plus, Trash2, Copy, Clock, ChevronDown, FileText, X, Shield, Eye, EyeOff, Key, AlertTriangle } from "lucide-react";
+
+const MAX_RESPONSE_SIZE = 1000000; // 1MB limit for response preview
 
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const METHOD_COLORS = {
@@ -529,8 +531,16 @@ export default function ApiTester() {
                                     </button>
                                 </div>
                             )}
+                            {response.body?.length > MAX_RESPONSE_SIZE && (
+                                <div className="mb-3 px-3 py-2 rounded-lg text-[10px] flex items-center gap-2" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                                    <AlertTriangle size={14} />
+                                    <span>Response is very large ({Math.round(response.body.length / 1024)} KB). Preview has been truncated for performance.</span>
+                                </div>
+                            )}
                             <pre className="whitespace-pre-wrap break-all" style={{ color: "var(--color-text-primary)", lineHeight: "1.6" }}>
-                                {response.body || "(empty response)"}
+                                {response.body?.length > MAX_RESPONSE_SIZE
+                                    ? response.body.slice(0, MAX_RESPONSE_SIZE) + "\n... [TRUNCATED]"
+                                    : response.body || "(empty response)"}
                             </pre>
                         </div>
                     )}

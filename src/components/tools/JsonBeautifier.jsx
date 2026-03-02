@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useToast, copyToClipboard, downloadFile } from "@/utils/helpers";
-import { Sparkles, Minimize2, FileDown, Copy, FileText, Trash2, ChevronDown } from "lucide-react";
+import { Sparkles, Minimize2, FileDown, Copy, FileText, Trash2, ChevronDown, AlertTriangle } from "lucide-react";
+
+const AUTO_LIMIT = 500000; // 500KB limit for auto-processing
 
 export default function JsonBeautifier() {
     const [input, setInput] = useState("");
@@ -29,7 +31,7 @@ export default function JsonBeautifier() {
     };
 
     useEffect(() => {
-        if (input.trim()) {
+        if (input.trim() && input.length < AUTO_LIMIT) {
             beautify(true);
         }
     }, [indent, input]);
@@ -110,6 +112,13 @@ export default function JsonBeautifier() {
                     <Trash2 size={14} /> Clear
                 </button>
             </div>
+
+            {input.length >= AUTO_LIMIT && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                    <AlertTriangle size={18} />
+                    <p>Input is large ({Math.round(input.length / 1024)} KB). Auto-update disabled. Click "Beautify" to process manually.</p>
+                </div>
+            )}
 
             {error && (
                 <div

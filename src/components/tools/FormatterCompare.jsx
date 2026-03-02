@@ -2,7 +2,10 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast, copyToClipboard } from "@/utils/helpers";
-import { GitCompareArrows, Trash2, Upload, Diff, FileText, ArrowRightLeft } from "lucide-react";
+import { GitCompareArrows, Trash2, Upload, Diff, FileText, ArrowRightLeft, AlertTriangle } from "lucide-react";
+
+const MAX_CHARS = 100000;
+const MAX_LINES = 2000;
 
 // --- LCS-based diff algorithm ---
 function lcs(a, b) {
@@ -132,6 +135,19 @@ export default function FormatterCompare() {
             showToast("Please enter text on both sides", "error");
             return;
         }
+
+        if (left.length > MAX_CHARS || right.length > MAX_CHARS) {
+            showToast(`Content too large (max ${MAX_CHARS.toLocaleString()} chars)`, "error");
+            return;
+        }
+
+        const lLines = left.split("\n").length;
+        const rLines = right.split("\n").length;
+        if (lLines > MAX_LINES || rLines > MAX_LINES) {
+            showToast(`Too many lines (max ${MAX_LINES.toLocaleString()})`, "error");
+            return;
+        }
+
         const result = computeDiff(left, right);
         setDiff(result);
         const added = result.filter((r) => r.type === "added").length;

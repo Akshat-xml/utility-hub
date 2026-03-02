@@ -6,6 +6,8 @@ import { ShieldCheck, Play, FileText, Trash2, CheckCircle, XCircle, AlertTriangl
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 
+const AUTO_LIMIT = 500000; // 500KB limit for auto-validation
+
 const SAMPLE_SCHEMA = `{
   "type": "object",
   "required": ["name", "age", "email"],
@@ -108,7 +110,7 @@ export default function JsonSchemaValidator() {
     };
 
     useEffect(() => {
-        if (schema.trim() && data.trim()) {
+        if (schema.trim() && data.trim() && (schema.length + data.length) < AUTO_LIMIT) {
             validate(true);
         }
     }, [schema, data]);
@@ -175,6 +177,13 @@ export default function JsonSchemaValidator() {
                     </div>
                 )}
             </div>
+
+            {(schema.length + data.length) >= AUTO_LIMIT && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                    <AlertTriangle size={18} />
+                    <p>Input is large ({Math.round((schema.length + data.length) / 1024)} KB). Auto-validation disabled. Click "Validate" to process manually.</p>
+                </div>
+            )}
 
             {/* Editors */}
             <div className="flex-1 grid grid-cols-2 gap-3 min-h-0">

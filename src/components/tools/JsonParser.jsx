@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/utils/helpers";
-import { GitBranch, Play, Trash2, FileText, Search, ChevronRight, ChevronDown } from "lucide-react";
+import { GitBranch, Play, Trash2, FileText, Search, ChevronRight, ChevronDown, AlertTriangle } from "lucide-react";
+
+const AUTO_LIMIT = 300000; // 300KB limit for auto-parsing (rendering tree is expensive)
 
 function TreeNode({ name, value, depth = 0 }) {
     const [expanded, setExpanded] = useState(depth < 2);
@@ -87,9 +89,9 @@ export default function JsonParser() {
     };
 
     useEffect(() => {
-        if (input.trim()) {
+        if (input.trim() && input.length < AUTO_LIMIT) {
             parse(true);
-        } else {
+        } else if (!input.trim()) {
             setParsed(null);
         }
     }, [input]);
@@ -140,6 +142,13 @@ export default function JsonParser() {
                     </div>
                 )}
             </div>
+
+            {input.length >= AUTO_LIMIT && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                    <AlertTriangle size={18} />
+                    <p>Input is large ({Math.round(input.length / 1024)} KB). Auto-update disabled to prevent UI lag. Click "Parse" to process manually.</p>
+                </div>
+            )}
 
             {error && (
                 <div className="mb-4 px-4 py-3 rounded-lg text-sm font-medium" style={{ background: "var(--color-diff-remove)", color: "var(--color-error)" }}>

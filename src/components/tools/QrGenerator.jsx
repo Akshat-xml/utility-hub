@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/utils/helpers";
-import { QrCode, Download } from "lucide-react";
+import { QrCode, Download, AlertTriangle } from "lucide-react";
 
 export default function QrGenerator() {
     const [text, setText] = useState("");
@@ -197,42 +197,76 @@ export default function QrGenerator() {
                         className="glass-card p-8 flex items-center justify-center"
                         style={{ minHeight: "300px", minWidth: "300px" }}
                     >
-                        {text.trim() ? (
-                            <div className="flex flex-col items-center gap-4">
-                                {/* SVG for display + SVG download */}
-                                <QRCodeSVG
-                                    id="qr-svg"
-                                    value={text}
-                                    size={Math.min(size, 350)}
-                                    fgColor={fgColor}
-                                    bgColor={bgColor}
-                                    level={level}
-                                />
-                                {/* Canvas for PNG download - visually hidden but still rendered */}
-                                <div
-                                    ref={canvasRef}
-                                    style={{
-                                        position: "absolute",
-                                        left: "-9999px",
-                                        top: "-9999px",
-                                        opacity: 0,
-                                        pointerEvents: "none",
-                                    }}
-                                >
-                                    <QRCodeCanvas
+                        {(() => {
+                            if (!text.trim()) {
+                                return (
+                                    <p className="text-sm italic text-center" style={{ color: "var(--color-text-muted)" }}>
+                                        Enter text above to generate<br />a QR code preview
+                                    </p>
+                                );
+                            }
+
+                            // Rough max limits for different levels (UTF-8 bytes)
+                            const limits = { L: 2953, M: 2331, Q: 1663, H: 1273 };
+                            const limit = limits[level] || 1273;
+
+                            if (text.length > limit) {
+                                return (
+                                    <div className="flex flex-col items-center gap-3 text-center p-4">
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "rgba(248,81,73,0.1)", color: "#f85149" }}>
+                                            <AlertTriangle size={24} />
+                                        </div>
+                                        <div style={{ color: "#f85149" }}>
+                                            <p className="font-semibold text-sm">Data too long</p>
+                                            <p className="text-xs opacity-80 mt-1">
+                                                Content exceeds the limit for Error Correction Level {level}.<br />
+                                                Limit: {limit} characters. Current: {text.length}.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setLevel("L")}
+                                            className="text-xs font-medium px-3 py-1.5 rounded-md mt-2 transition-colors"
+                                            style={{ background: "var(--color-bg-input)", color: "var(--color-text-primary)", border: "1px solid var(--color-border)" }}
+                                        >
+                                            Try Low Error Correction
+                                        </button>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="flex flex-col items-center gap-4">
+                                    {/* SVG for display + SVG download */}
+                                    <QRCodeSVG
+                                        id="qr-svg"
                                         value={text}
-                                        size={size}
+                                        size={Math.min(size, 350)}
                                         fgColor={fgColor}
                                         bgColor={bgColor}
                                         level={level}
                                     />
+                                    {/* Canvas for PNG download - visually hidden but still rendered */}
+                                    <div
+                                        ref={canvasRef}
+                                        style={{
+                                            position: "absolute",
+                                            left: "-9999px",
+                                            top: "-9999px",
+                                            opacity: 0,
+                                            pointerEvents: "none",
+                                        }}
+                                    >
+                                        <QRCodeCanvas
+                                            value={text}
+                                            size={size}
+                                            fgColor={fgColor}
+                                            bgColor={bgColor}
+                                            level={level}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <p className="text-sm italic text-center" style={{ color: "var(--color-text-muted)" }}>
-                                Enter text above to generate<br />a QR code preview
-                            </p>
-                        )}
+                            );
+                        })()}
                     </div>
                     {text.trim() && (
                         <p className="mt-3 text-xs" style={{ color: "var(--color-text-muted)" }}>

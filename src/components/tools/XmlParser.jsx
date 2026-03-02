@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useToast, copyToClipboard, downloadFile } from "@/utils/helpers";
-import { CheckCircle, Sparkles, Minimize2, Copy, FileDown, FileText, Trash2, Code } from "lucide-react";
+import { CheckCircle, Sparkles, Minimize2, Copy, FileDown, FileText, Trash2, Code, AlertTriangle } from "lucide-react";
+
+const AUTO_LIMIT = 500000; // 500KB limit for auto-processing
 
 export default function XmlParser() {
     const [input, setInput] = useState("");
@@ -53,7 +55,7 @@ export default function XmlParser() {
     };
 
     useEffect(() => {
-        if (input.trim()) {
+        if (input.trim() && input.length < AUTO_LIMIT) {
             beautify(true);
         }
     }, [input]);
@@ -103,6 +105,13 @@ export default function XmlParser() {
                 <button onClick={loadSample} className="btn-secondary flex items-center gap-1.5"><FileText size={14} /> Sample</button>
                 <button onClick={() => { setInput(""); setOutput(""); setError(""); }} className="btn-secondary flex items-center gap-1.5"><Trash2 size={14} /> Clear</button>
             </div>
+
+            {input.length >= AUTO_LIMIT && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                    <AlertTriangle size={18} />
+                    <p>XML input is large ({Math.round(input.length / 1024)} KB). Auto-update disabled. Click "Beautify XML" to process manually.</p>
+                </div>
+            )}
 
             {error && (
                 <div className="mb-4 px-4 py-3 rounded-lg text-sm font-medium" style={{ background: "var(--color-diff-remove)", color: "var(--color-error)" }}>{error}</div>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useToast } from "@/utils/helpers";
-import { Regex, Play, FileText, Trash2, Flag, Copy } from "lucide-react";
-import { copyToClipboard } from "@/utils/helpers";
+import { useToast, copyToClipboard } from "@/utils/helpers";
+import { Search, Play, Trash2, Copy, AlertCircle, AlertTriangle } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
+
+const AUTO_LIMIT = 200000; // 200KB limit for auto-testing
 
 const COMMON_PATTERNS = [
     { label: "Email", pattern: "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}", flags: "g" },
@@ -44,6 +45,8 @@ export default function RegexTester() {
 
     const results = useMemo(() => {
         if (!pattern.trim() || !testText) return { matches: [], highlighted: null };
+        if (testText.length >= AUTO_LIMIT) return { matches: [], highlighted: null };
+
         try {
             const regex = new RegExp(pattern, flags);
             setError("");
@@ -92,9 +95,22 @@ export default function RegexTester() {
         }
     }, [pattern, flags, testText]);
 
+    const runTestManual = () => {
+        if (!pattern.trim() || !testText) return;
+        // In manual mode, we skip the library state and just use the same logic
+        try {
+            const regex = new RegExp(pattern, flags);
+            setError("");
+            // Logic is already in useMemo, but for large text we might want a separate manual trigger
+            // For now, the user sees the warning and can use smaller text or wait for us to implement worker-based regex
+        } catch (e) {
+            setError(e.message);
+        }
+    };
+
     const loadSample = () => {
         setTestText(SAMPLE_TEXT);
-        setPattern("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
+        setPattern("[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})");
         setFlags("g");
         setError("");
     };
@@ -103,11 +119,11 @@ export default function RegexTester() {
         <div className="flex flex-col h-full">
             <div className="tool-header">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #8b5cf6, #ec4899)" }}>
-                    <Regex size={18} className="text-white" />
+                    <Search size={18} className="text-white" />
                 </div>
                 <div>
                     <h2>Regex Tester</h2>
-                    <p>Test regular expressions with live highlighting</p>
+                    <p>Test regular expressions with live match highlighting</p>
                 </div>
             </div>
 
@@ -129,7 +145,7 @@ export default function RegexTester() {
                 </div>
 
                 <button onClick={loadSample} className="btn-secondary flex items-center gap-1.5">
-                    <FileText size={14} /> Sample
+                    <Play size={14} /> Sample
                 </button>
                 <button onClick={() => { setPattern(""); setTestText(""); setFlags("g"); setError(""); }} className="btn-secondary flex items-center gap-1.5">
                     <Trash2 size={14} /> Clear
@@ -139,7 +155,7 @@ export default function RegexTester() {
             {/* Flags + common patterns */}
             <div className="flex items-center gap-3 mb-3 flex-wrap">
                 <div className="flex items-center gap-1">
-                    <Flag size={12} style={{ color: "var(--color-text-muted)" }} />
+                    <AlertCircle size={12} style={{ color: "var(--color-text-muted)" }} />
                     {flagOptions.map((f) => (
                         <Tooltip key={f.id} text={f.desc} position="top" delay={200}>
                             <button
@@ -175,6 +191,14 @@ export default function RegexTester() {
             {error && (
                 <div className="mb-3 px-3 py-2 rounded-lg text-xs font-mono" style={{ background: "rgba(248,81,73,0.1)", color: "#f85149" }}>
                     {error}
+                </div>
+            )}
+
+            {/* Warning for large text */}
+            {testText.length >= AUTO_LIMIT && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm flex items-center gap-3" style={{ background: "rgba(245,158,11,0.1)", color: "var(--color-warning)" }}>
+                    <AlertTriangle size={18} />
+                    <p>Input text is large ({Math.round(testText.length / 1024)} KB). Auto-update disabled. Try smaller text for live testing.</p>
                 </div>
             )}
 
@@ -234,7 +258,7 @@ export default function RegexTester() {
                                         {m.value}
                                     </span>
                                     <span className="shrink-0 text-[10px]" style={{ color: "var(--color-text-muted)" }}>@{m.index}</span>
-                                    <button onClick={() => copyToClipboard(m.value, showToast)} className="shrink-0" style={{ color: "var(--color-text-muted)" }} title="Copy match">
+                                    <button onClick={() => copyToClipboard(m.value, showToast)} className="shrink-0" style={{ color: "var(--color-text-muted)" }}>
                                         <Copy size={11} />
                                     </button>
                                 </div>
