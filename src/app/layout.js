@@ -16,6 +16,17 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+                document.documentElement.classList.add('mac-os');
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>

@@ -46,8 +46,17 @@
   --color-text-muted: #6b7280;
   --color-diff-add: #052e16;
   --color-diff-remove: #450a0a;
-  --color-diff-add-text: #86efac;
   --color-diff-remove-text: #fca5a5;
+}
+
+/* 
+  Windows usually runs with 125% OS-level scaling on standard displays.
+  Macs render at true CSS pixels. This rule specifically targets Macs
+  and changes the base rem unit from 16px to 20px (16 * 1.25 = 20),
+  which artificially scales the entire Tailwind UI by 125% to match Windows.
+*/
+html.mac-os {
+  font-size: 20px;
 }
 
 * {
